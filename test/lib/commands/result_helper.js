@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 IBM Corp.
+ * Copyright OpenJS Foundation and other contributors, https://openjsf.org/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-var colors = require("colors");
 var sinon = require("sinon");
 var result = require("../../../lib/result");
 
@@ -24,7 +23,7 @@ module.exports = {
     logList: sinon.spy(),
     logNodeList: sinon.spy(),
     logDetails: sinon.spy(),
-    
+
     reset: function() {
         module.exports.log.reset();
         module.exports.warn.reset();

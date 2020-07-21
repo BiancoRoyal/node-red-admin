@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 IBM Corp.
+ * Copyright OpenJS Foundation and other contributors, https://openjsf.org/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ var command = require("../../../lib/commands/install");
 
 var should = require("should");
 var sinon = require("sinon");
-var when = require("when");
 
 var request = require("../../../lib/request");
 var result = require("./result_helper");
@@ -30,7 +29,7 @@ describe("commands/install", function() {
         }
         result.reset();
     });
-    
+
     it('installs a node', function(done) {
         var error;
         sinon.stub(request,"request",function(path,opts) {
@@ -38,25 +37,25 @@ describe("commands/install", function() {
                 should(path).be.eql("/nodes");
                 opts.should.eql({
                     method:"POST",
-                    body:'{"module":"testnode"}'
+                    data:{"module":"testnode"}
                 });
             } catch(err) {
                 error = err;
             }
-            return when.resolve([]);
+            return Promise.resolve([]);
         });
         command({_:[null,"testnode"]},result).then(function() {
             if (error) {
                 throw error;
             }
-            result.logDetails.called.should.be.true;
+            result.logDetails.called.should.be.true();
             done();
-        }).otherwise(done);
+        }).catch(done);
     });
-    
+
     it('displays command help if node not specified', function(done) {
         command({_:{}},result);
-        result.help.called.should.be.true;
+        result.help.called.should.be.true();
         done();
     });
 });

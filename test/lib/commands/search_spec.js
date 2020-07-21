@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 IBM Corp.
+ * Copyright OpenJS Foundation and other contributors, https://openjsf.org/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@ var command = require("../../../lib/commands/search");
 
 var should = require("should");
 var sinon = require("sinon");
-var when = require("when");
 
-var httpRequest = require("request");
+var httpRequest = require("axios");
 var result = require("./result_helper");
 
 describe("commands/install", function() {
@@ -30,66 +29,52 @@ describe("commands/install", function() {
         }
         result.reset();
     });
-    
+
     it('reports no results when none match',function(done) {
-        sinon.stub(httpRequest,"get").yields(null,{statusCode:200},JSON.stringify({"objects":[],"total":0,"time":"Thu Feb 27 2020 11:27:22 GMT+0000 (UTC)"}));
-        
+        sinon.stub(httpRequest,"get").returns(Promise.resolve({status:200,data:{"data":[]}}));
+
         command({_:[null,"testnode"]},result).then(function() {
-            result.log.called.should.be.true;
-            result.log.args[0][0].should.eql("total: 0 objects: 0 found");
-            result.log.args[1][0].should.eql("No results found");
+            result.log.called.should.be.true();
+            result.log.args[0][0].should.eql("No results found");
             done();
-        }).otherwise(done);
-            
+        }).catch(done);
+
     });
-    it('lists matched modules',function(done) {
-        sinon.stub(httpRequest,"get").yields(null,{statusCode:200},
-            JSON.stringify({
-                "objects":[
-                    { "package":{"name": "testnode", "description": "a random node", "keywords":["testnode", "node-red", "test"]} },
-                    { "package":{"name": "testnodes", "description": "a random nodes test", "keywords":["testnodes", "node-red", "tests"]} }
-                ],
-                "total":2,
-                "time":"Thu Feb 27 2020 11:27:22 GMT+0000 (UTC)"
-                })
-        );
-        
+    it('lists results ordered by relevance',function(done) {
+        sinon.stub(httpRequest,"get").returns(Promise.resolve({status:200,data:{
+            "data":[
+                { "name":"another-node", "description":"a testnode - THREE" },
+                { "name":"testnode", "description":"a test node - ONE" },
+                { "name":"@scoped/testnode", "description":"once more - TWO" }
+            ]
+            }}));
+
         command({_:[null,"testnode"]},result).then(function() {
-            result.log.calledTwice.should.be.true;
-            /testnode/.test(result.log.args[0][0]).should.be.true;
-            /testnode/.test(result.log.args[1][0]).should.be.true;
+            result.log.args.length.should.equal(3);
+            /ONE/.test(result.log.args[0][0]).should.be.true();
+            /TWO/.test(result.log.args[1][0]).should.be.true();
+            /THREE/.test(result.log.args[2][0]).should.be.true();
             done();
-        }).otherwise(done);
-            
+        }).catch(done);
+
     });
-    
-    it('reports error response',function(done) {
-        sinon.stub(httpRequest,"get").yields("testError",{statusCode:200},JSON.stringify({rows:[]}));
-        
-        command({_:[null,"testnode"]},result).then(function() {
-            result.log.called.should.be.false;
-            result.warn.called.should.be.true;
-            result.warn.args[0][0].should.eql("testError");
-            done();
-        }).otherwise(done);
-            
-    });
-    
+
     it('reports unexpected http response',function(done) {
-        sinon.stub(httpRequest,"get").yields(null,{statusCode:101},"testError");
-        
+        sinon.stub(httpRequest,"get").returns(Promise.resolve({status:101,data:"testError"}));
+
         command({_:[null,"testnode"]},result).then(function() {
-            result.log.called.should.be.false;
-            result.warn.called.should.be.true;
-            result.warn.args[0][0].should.eql("101: testError");
+            done("Should not have resolved")
+        }).catch(err => {
+            result.log.called.should.be.false();
+            /101: testError/.test(err).should.be.true();
             done();
-        }).otherwise(done);
+        }).catch(done);
     });
-    
+
     it('displays command help if node not specified', function(done) {
         command({_:{}},result);
-        result.help.called.should.be.true;
+        result.help.called.should.be.true();
         done();
     });
-    
+
 });

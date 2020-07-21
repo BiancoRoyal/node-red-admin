@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 IBM Corp.
+ * Copyright OpenJS Foundation and other contributors, https://openjsf.org/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ var command = require("../../../lib/commands/list");
 
 var should = require("should");
 var sinon = require("sinon");
-var when = require("when");
-
 var request = require("../../../lib/request");
 var result = require("./result_helper");
 
@@ -28,7 +26,7 @@ describe("commands/list", function() {
         request.request.restore();
         result.reset();
     });
-    
+
     it('lists all nodes', function(done) {
         var error;
         sinon.stub(request,"request",function(path,opts) {
@@ -38,15 +36,15 @@ describe("commands/list", function() {
             } catch(err) {
                 error = err;
             }
-            return when.resolve([]);
+            return Promise.resolve([]);
         });
         command({},result).then(function() {
             if (error) {
                 throw error;
             }
-            result.logNodeList.called.should.be.true;
+            result.logNodeList.called.should.be.true();
             done();
-        }).otherwise(done);
+        }).catch(done);
     });
-        
+
 });

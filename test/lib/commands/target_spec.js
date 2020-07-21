@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 IBM Corp.
+ * Copyright OpenJS Foundation and other contributors, https://openjsf.org/
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ var command = require("../../../lib/commands/target");
 
 var should = require("should");
 var sinon = require("sinon");
-var when = require("when");
 
 var config = require("../../../lib/config");
 
@@ -36,39 +35,44 @@ describe("commands/target", function() {
         result.reset();
         config.target.restore();
     });
-    
+
     it('queries the target', function(done) {
-        command({_:[]},result);
-        config.target.called.should.be.true;
-        config.target.args[0].should.have.lengthOf(0);
-        result.log.called.should.be.true;
-        /http\:\/\/test\.example\.com/.test(result.log.args[0][0]).should.be.true;
-        done();
+        command({_:[]},result).then(() => {;
+            config.target.called.should.be.true();
+            config.target.args[0].should.have.lengthOf(0);
+            result.log.called.should.be.true();
+            /http\:\/\/test\.example\.com/.test(result.log.args[0][0]).should.be.true();
+            done();
+        }).catch(done);
     });
-    
+
     it('sets the target', function(done) {
-        command({_:[null,"http://newtarget.example.com"]},result);
-        config.target.called.should.be.true;
-        config.target.args[0][0].should.eql("http://newtarget.example.com");
-        result.log.called.should.be.true;
-        /http\:\/\/newtarget\.example\.com/.test(result.log.args[0][0]).should.be.true;
-        done();
+        command({_:[null,"http://newtarget.example.com"]},result).then(() => {
+            config.target.called.should.be.true();
+            config.target.args[0][0].should.eql("http://newtarget.example.com");
+            result.log.called.should.be.true();
+            /http\:\/\/newtarget\.example\.com/.test(result.log.args[0][0]).should.be.true();
+            done();
+        }).catch(done);
     });
-    
+
     it('rejects non http targets', function(done) {
-        command({_:[null,"ftp://newtarget.example.com"]},result);
-        config.target.called.should.be.false;
-        result.warn.called.should.be.true;
-        done();
+        command({_:[null,"ftp://newtarget.example.com"]},result).then(() => {
+            done("Should not have accepted non http target")
+        }).catch(err => {
+            config.target.called.should.be.false();
+            done();
+        }).catch(done);
     });
     it('strips trailing slash from target', function(done) {
-        command({_:[null,"http://newtarget.example.com/"]},result);
-        config.target.called.should.be.true;
-        config.target.args[0][0].should.eql("http://newtarget.example.com");
-        done();
+        command({_:[null,"http://newtarget.example.com/"]},result).then(() => {
+            config.target.called.should.be.true();
+            config.target.args[0][0].should.eql("http://newtarget.example.com");
+            done();
+        }).catch(done);
     });
-    
-    
-    
-        
+
+
+
+
 });
